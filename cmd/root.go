@@ -26,7 +26,30 @@ var rootCmd = &cobra.Command{
 above command will run ssh command forever and will restart ssh if it crashes or exits`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {},
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
+}
+
+func init() {
+	rootCmd.Flags().StringVarP(&timeout, "timeout", "t", "10", "timeout in seconds")
+	rootCmd.Flags().BoolP("verbose", "v", false, "Verbose mode")
+
+	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			fmt.Println("No command provided")
+			os.Exit(1)
+		}
+	}
+
+	rootCmd.Run = func(cmd *cobra.Command, args []string) {
 		timeoutInt, err := strconv.Atoi(timeout)
 		if err != nil {
 			fmt.Println("Invalid timeout value")
@@ -46,27 +69,13 @@ above command will run ssh command forever and will restart ssh if it crashes or
 			fmt.Println("timeout is", timeoutInt)
 		}
 		runInfinitely(timeoutInt, args, verbose)
-	},
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
 	}
-}
-
-func init() {
-	rootCmd.Flags().StringVarP(&timeout, "timeout", "t", "10", "timeout in seconds")
-
-	rootCmd.Flags().BoolP("verbose", "v", false, "Verbose mode")
 
 }
 
 func runInfinitely(timeoutInt int, args []string, verbose bool) {
 	for {
+		// cmd is all the arguments and flags (Instread of this cmd flags) passed to run4ever
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
