@@ -17,15 +17,12 @@ var timeout string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "run4ever",
-	Short: "run4ever is a CLI tool to run a command forever",
-	Long: `run4ever is a CLI tool to run a command forever. example:
-
-		run4ever ssh user@server -D 1234
-
-above command will run ssh command forever and will restart ssh if it crashes or exits`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
+	Use:                "	run4ever [flags] [your command]",
+	Short:              "run4ever is a CLI tool to run a command forever",
+	Example:            "	run4ever -t 10 echo hello world",
+	Long:               `run4ever is a CLI tool to run a command forever.`,
+	DisableFlagParsing: false,
+	// BashCompletionFunction:     bashCompletionFunc,
 	Run: func(cmd *cobra.Command, args []string) {},
 }
 
@@ -41,6 +38,7 @@ func Execute() {
 func init() {
 	rootCmd.Flags().StringVarP(&timeout, "timeout", "t", "10", "timeout in seconds")
 	rootCmd.Flags().BoolP("verbose", "v", false, "Verbose mode")
+	rootCmd.Flags().SetInterspersed(false)
 
 	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
