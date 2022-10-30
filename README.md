@@ -25,5 +25,5 @@ go build -o run4ever
 I'm working on it ;)
 
 #### Todo
-- [ ] Fix flags conflict
+- [X] Fix flags conflict between run4ever and command (Fixed)
 - [ ] Add bash completion
