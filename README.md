@@ -20,6 +20,10 @@ go build -o run4ever
 ./run4ever ssh -D 1080 user@server.example.com
 ```
 
-# Known issues
+#### Known issues
 - Unfortunatly, has conflict between this program flags and command flags, so you can't use flags for running command **at this time ** , just use command without flags or use shell script as command
 I'm working on it ;)
+
+#### Todo
+- [ ] Fix flags conflict
+- [ ] Add bash completion
