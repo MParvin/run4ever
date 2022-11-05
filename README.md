@@ -31,3 +31,4 @@ I'm working on it ;)
 - [ ] Prevent ctrl+c to break run4ever
 - [ ] Get process id of running command and kill it when ctrl+c pressed
 - [ ] Add github actions
+- [ ] Add tests
