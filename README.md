@@ -27,3 +27,6 @@ I'm working on it ;)
 #### Todo
 - [X] Fix flags conflict between run4ever and command (Fixed)
 - [ ] Add bash completion
+- [ ] Add run in background
+- [ ] Prevent ctrl+c to break run4ever
+- [ ] Get process id of running command and kill it when ctrl+c pressed
