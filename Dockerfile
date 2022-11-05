@@ -1,5 +1,7 @@
-FROM golang:1.12.5-alpine3.9
+FROM golang:1.19-alpine3.16
 RUN apk add --no-cache git
+
+ENV GO111MODULE="on"
 
 WORKDIR /go/src/github.com/mparvin/run4ever
 COPY . .
