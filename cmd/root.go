@@ -13,13 +13,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var timeout string
+var delay string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:                "	run4ever [flags] [your command]",
-	Short:              "run4ever is a CLI tool to run a command forever",
-	Example:            "	run4ever -t 10 echo hello world",
+	Use: "	run4ever [flags] [your command]",
+	Short: "run4ever is a CLI tool to run a command forever",
+	Example: "	run4ever -d 10 echo hello world",
 	Long:               `run4ever is a CLI tool to run a command forever.`,
 	DisableFlagParsing: false,
 	// BashCompletionFunction:     bashCompletionFunc,
@@ -36,7 +36,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&timeout, "timeout", "t", "10", "timeout in seconds")
+	rootCmd.Flags().StringVarP(&delay, "delay", "d", "10", "delay between to run of the command")
 	rootCmd.Flags().BoolP("verbose", "v", false, "Verbose mode")
 	rootCmd.Flags().SetInterspersed(false)
 
@@ -48,9 +48,9 @@ func init() {
 	}
 
 	rootCmd.Run = func(cmd *cobra.Command, args []string) {
-		timeoutInt, err := strconv.Atoi(timeout)
+		delayInt, err := strconv.Atoi(delay)
 		if err != nil {
-			fmt.Println("Invalid timeout value")
+			fmt.Println("Invalid delay value")
 			os.Exit(1)
 		}
 
@@ -64,14 +64,14 @@ func init() {
 
 		if verbose {
 			fmt.Println("run4ever called")
-			fmt.Println("timeout is", timeoutInt)
+			fmt.Println("dely is", delayInt)
 		}
-		runInfinitely(timeoutInt, args, verbose)
+		runInfinitely(delayInt, args, verbose)
 	}
 
 }
 
-func runInfinitely(timeoutInt int, args []string, verbose bool) {
+func runInfinitely(delayInt int, args []string, verbose bool) {
 	for {
 		// cmd is all the arguments and flags (Instread of this cmd flags) passed to run4ever
 		cmd := exec.Command(args[0], args[1:]...)
@@ -84,15 +84,15 @@ func runInfinitely(timeoutInt int, args []string, verbose bool) {
 			if verbose {
 				fmt.Println(err)
 			}
-			// Sleep for timeout seconds before trying again
-			time.Sleep(time.Duration(timeoutInt) * time.Second)
+			// Sleep for delayInt seconds
+			time.Sleep(time.Duration(delayInt) * time.Second)
 			continue
 		}
 		if verbose {
 			fmt.Printf("Command %s exited", args[0])
-			fmt.Print("Sleeping for ", timeoutInt, " seconds")
+			fmt.Print("Sleeping for ", delayInt, " seconds")
 		}
-		time.Sleep(time.Duration(timeoutInt) * time.Second)
+		time.Sleep(time.Duration(delayInt) * time.Second)
 	}
 
 }
