@@ -63,17 +63,52 @@ jobs:
         push: true
         tags: ghcr.io/mparvin/run4ever:latest
 
-    - name: Add github release
-      uses: softprops/action-gh-release@v1
+    - name: Add Linux64 release to GitHub
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        files: |
-          run4ever-linux-x86_64
-          run4ever-darwin-amd64
-          run4ever-windows-amd64.exe
-          run4ever-linux-arm64
-          run4ever-linux-386
-        draft: true
-        prerelease: true
-        tag_name: ${{ github.sha }}
-        name: ${{ github.sha }}
-        body: ${{ github.sha }}
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./run4ever-linux-x86_64
+        asset_name: run4ever-linux-x86_64
+        asset_content_type: application/octet-stream
+
+    - name: Add Darwin64 release to GitHub
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./run4ever-darwin-amd64
+        asset_name: run4ever-darwin-amd64
+        asset_content_type: application/octet-stream
+
+    - name: Add Windows64 release to GitHub
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./run4ever-windows-amd64.exe
+        asset_name: run4ever-windows-amd64.exe
+        asset_content_type: application/octet-stream
+
+    - name: Add LinuxArm64 release to GitHub
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./run4ever-linux-arm64
+        asset_name: run4ever-linux-arm64
+        asset_content_type: application/octet-stream
+
+    - name: Add Linux386 release to GitHub
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./run4ever-linux-386
+        asset_name: run4ever-linux-386
+        asset_content_type: application/octet-stream
