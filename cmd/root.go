@@ -17,10 +17,14 @@ var delay string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use: "	run4ever [flags] [your command]",
-	Short: "run4ever is a CLI tool to run a command forever",
-	Example: "	run4ever -d 10 echo hello world",
-	Long:               `run4ever is a CLI tool to run a command forever.`,
+	Use:     "run4ever [flags] [command] [arguments]",
+	Short:   "Run a command indefinitely with a specified delay between executions.",
+	Example: "run4ever -d 30 echo hello world",
+	Long: `run4ever is a command-line tool that allows you to run a specified command repeatedly, with a specified delay between each execution.
+
+You can use the -d flag to specify the delay in seconds between command executions. By default, the delay is 10 seconds.
+
+You can also enable verbose mode by using the -v flag. This will cause run4ever to print additional output such as errors and confirmation messages.`,
 	DisableFlagParsing: false,
 	// BashCompletionFunction:     bashCompletionFunc,
 	Run: func(cmd *cobra.Command, args []string) {},
