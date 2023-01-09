@@ -23,7 +23,13 @@ jobs:
       run: go mod tidy
 
     - name: Build
-      run: go build -v ./...
+      run: |
+        go build -o run4ever-linux-x86_64
+        GOOS=darwin GOARCH=amd64 go build -o run4ever-darwin-amd64
+        GOOS=windows GOARCH=amd64 go build -o run4ever-windows-amd64.exe
+        GOOS=linux GOARCH=arm64 go build -o run4ever-linux-arm64
+        GOOS=linux GOARCH=386 go build -o run4ever-linux-386
+        chmod +x run4ever-linux-x86_64 run4ever-darwin-amd64 run4ever-linux-arm64 run4ever-linux-386
 
     - name: Test
       run: go test -v ./...
@@ -61,7 +67,11 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          run4ever
+          run4ever-linux-x86_64
+          run4ever-darwin-amd64
+          run4ever-windows-amd64.exe
+          run4ever-linux-arm64
+          run4ever-linux-386
         draft: true
         prerelease: true
         tag_name: ${{ github.sha }}
