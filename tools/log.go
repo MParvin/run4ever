@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"io"
 )
 
 func WriteHeader(logFile string) {
@@ -76,4 +77,29 @@ func DeleteLog(pid int) {
 	if err := os.Rename(tempFile.Name(), logFile); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func Watch() {
+	HomeDir := os.Getenv("HOME")
+	logFile := HomeDir + "/.run4ever/run4ever.state"
+
+	for {
+			f, err := os.Open(logFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer f.Close()
+			_, err = f.Seek(0, io.SeekStart)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			scanner := bufio.NewScanner(f)
+			for scanner.Scan() {
+				fmt.Println(scanner.Text())
+			}
+			time.Sleep(3 * time.Second)
+			fmt.Print("\033[H\033[2J")
+	}
+	
 }
