@@ -10,7 +10,18 @@ import (
 	"time"
 )
 
-func Log(command string, pid int) {
+func WriteHeader(logFile string) {
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	if _, err := f.WriteString("Time \t\t\t | PID \t\t | Command \t | Args \t\t\n"); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func Log(command string, args []string, pid int) {
 	HomeDir := os.Getenv("HOME")
 	logFile := HomeDir + "/.run4ever/run4ever.state"
 
@@ -18,10 +29,10 @@ func Log(command string, pid int) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	t := time.Now()
 	tf := t.Format("2006-01-02 15:04:05")
-	if _, err := f.WriteString(fmt.Sprintf("%s %d %s\n", tf, pid, command)); err != nil {
+	if _, err := f.WriteString(fmt.Sprintf("%s \t | %d \t | %s \t\t | %s\n", tf, pid, command, strings.Join(args, " "))); err != nil {
 		log.Fatal(err)
 	}
 	if err := f.Close(); err != nil {
