@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"time"
+	"strconv"
 
+	tools "github.com/mparvin/run4ever/tools"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +26,18 @@ var rootCmd = &cobra.Command{
 You can use the -d flag to specify the delay in seconds between command executions. By default, the delay is 10 seconds.
 
 You can also enable verbose mode by using the -v flag. This will cause run4ever to print additional output such as errors and confirmation messages.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if len(args) > 0 {
+			tools.Log(args[0], os.Getpid())
+		}
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		tools.DeleteLog(os.Getpid())
+	},
+	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+		tools.DeleteLog(os.Getpid())
+		return nil
+	},
 	DisableFlagParsing: false,
 	// BashCompletionFunction:     bashCompletionFunc,
 	Run: func(cmd *cobra.Command, args []string) {},
