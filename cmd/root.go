@@ -28,7 +28,7 @@ You can use the -d flag to specify the delay in seconds between command executio
 You can also enable verbose mode by using the -v flag. This will cause run4ever to print additional output such as errors and confirmation messages.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
-			tools.Log(args[0], os.Getpid())
+			tools.Log(args[0], args[1:], os.Getpid())
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
