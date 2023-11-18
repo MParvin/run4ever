@@ -14,6 +14,7 @@ run4ever [flags] [command]
 
 ## Flags
 ```bash
+    -w or --watch: Show a list of running commands and their PIDs.
     -d or --delay: Specify the delay in seconds between command executions. Default is 10 seconds.
     -v or --verbose: Enable verbose mode. This will cause run4ever to print additional output such as errors and confirmation messages.
 ```
@@ -56,6 +57,7 @@ Run a long-running job that takes a long time to complete, but which needs to be
 
 #### Todo
 - [X] Fix flags conflict between run4ever and command (Fixed)
+- [X] Add watch flag
 - [ ] Add bash completion
 - [ ] Add github actions
 - [ ] Add tests

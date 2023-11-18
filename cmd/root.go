@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"time"
 	"strconv"
+	"log"
 
 	tools "github.com/mparvin/run4ever/tools"
 	"github.com/spf13/cobra"
@@ -23,7 +24,9 @@ var rootCmd = &cobra.Command{
 	Example: "run4ever -d 30 echo hello world",
 	Long: `run4ever is a command-line tool that allows you to run a specified command repeatedly, with a specified delay between each execution.
 
-You can use the -d flag to specify the delay in seconds between command executions. By default, the delay is 10 seconds.
+The -d flag or --delay flag is used to specify the delay between each execution of the command. The default value is 10 seconds.
+
+Use the -w flag or --watch to show a list of running commands and their PIDs, It will not run the provided command.
 
 You can also enable verbose mode by using the -v flag. This will cause run4ever to print additional output such as errors and confirmation messages.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -48,7 +51,7 @@ You can also enable verbose mode by using the -v flag. This will cause run4ever 
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
@@ -56,32 +59,38 @@ func init() {
 	rootCmd.Flags().StringVarP(&delay, "delay", "d", "10", "delay between to run of the command")
 	rootCmd.Flags().BoolP("verbose", "v", false, "Verbose mode")
 	rootCmd.Flags().SetInterspersed(false)
+	rootCmd.Flags().BoolP("watch", "w", false, "Watch mode")
 
 	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			fmt.Println("No command provided")
-			os.Exit(1)
+		if len(args) == 0  && rootCmd.Flags().Lookup("watch").Value.String() == "false" {
+			log.Fatal("No command provided")
 		}
 	}
 
 	rootCmd.Run = func(cmd *cobra.Command, args []string) {
 		delayInt, err := strconv.Atoi(delay)
 		if err != nil {
-			fmt.Println("Invalid delay value")
-			os.Exit(1)
+			log.Fatal("Invalid delay value provided")
 		}
 
 		verbose := false
-		//  convert cmd.Flags().Lookup("verbose").Value  to bool and store in verbose
 		verbose, err = cmd.Flags().GetBool("verbose")
 		if err != nil {
-			fmt.Println("Error getting verbose flag")
-			os.Exit(1)
+			log.Fatal("Error getting verbose flag")
 		}
 
 		if verbose {
 			fmt.Println("run4ever called")
 			fmt.Println("dely is", delayInt)
+		}
+
+		watch, err := cmd.Flags().GetBool("watch")
+		if err != nil {
+			log.Fatal("Error getting watch flag")
+		}
+		if watch {
+			tools.Watch()
+			return
 		}
 		runInfinitely(delayInt, args, verbose)
 	}
@@ -90,18 +99,15 @@ func init() {
 
 func runInfinitely(delayInt int, args []string, verbose bool) {
 	for {
-		// cmd is all the arguments and flags (Instread of this cmd flags) passed to run4ever
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
 		err := cmd.Run()
 		if err != nil {
-			// if -v flag is set, print error
 			if verbose {
 				fmt.Println(err)
 			}
-			// Sleep for delayInt seconds
 			time.Sleep(time.Duration(delayInt) * time.Second)
 			continue
 		}
