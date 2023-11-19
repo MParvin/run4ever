@@ -5,11 +5,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"time"
-	"strconv"
 	"log"
+	"os"
+	"strconv"
 
 	tools "github.com/mparvin/run4ever/tools"
 	"github.com/spf13/cobra"
@@ -62,7 +60,7 @@ func init() {
 	rootCmd.Flags().BoolP("watch", "w", false, "Watch mode")
 
 	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
-		if len(args) == 0  && rootCmd.Flags().Lookup("watch").Value.String() == "false" {
+		if len(args) == 0 && rootCmd.Flags().Lookup("watch").Value.String() == "false" {
 			log.Fatal("No command provided")
 		}
 	}
@@ -92,30 +90,7 @@ func init() {
 			tools.Watch()
 			return
 		}
-		runInfinitely(delayInt, args, verbose)
-	}
-
-}
-
-func runInfinitely(delayInt int, args []string, verbose bool) {
-	for {
-		cmd := exec.Command(args[0], args[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = os.Stdin
-		err := cmd.Run()
-		if err != nil {
-			if verbose {
-				fmt.Println(err)
-			}
-			time.Sleep(time.Duration(delayInt) * time.Second)
-			continue
-		}
-		if verbose {
-			fmt.Printf("Command %s exited", args[0])
-			fmt.Print("Sleeping for ", delayInt, " seconds")
-		}
-		time.Sleep(time.Duration(delayInt) * time.Second)
+		tools.RunInfinitely(delayInt, args, verbose)
 	}
 
 }
