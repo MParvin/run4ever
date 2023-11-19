@@ -20,36 +20,7 @@ run4ever [flags] [command]
 ```
 
 ## Example
-```bash
-./run4ever ssh -R 80:localhost:80 user@server.example.com
-```
-The above command will run the command `ssh -R 80:localhost:80 user@server.example.com` for ever, and If  the command fails, it will be restarted after 10 seconds.
-
-```bash
-./run4ever -d 5 ssh -D 1080 user@server.example.com
-```
-The above command will setup a SOCKS proxy on port 1080, and If  the command fails, it will be restarted after 5 seconds.
-
-```bash
-./run4ever -d 3600 my-backup-script.sh
-```
-This will run the script `my-backup-script.sh` every hour.
-
-```bash
-run4ever -d 60 check-service-status.sh my-service
-```
-Monitor the status of a service every minute.
-
-```bash
-run4ever -d 300 rsync -avz --delete /home/user/ /mnt/backup
-```
-This will run the command `rsync -avz --delete /home/user/ /mnt/backup` every 5 minutes.
-
-```bash
-./run4ever -d 300 my-long-running-job.sh
-```
-Run a long-running job that takes a long time to complete, but which needs to be restarted if it fails
-
+All examples are in [examples](examples) directory.
 
 ## Description
 `run4ever` is a command-line tool that allows you to run a specified command indefinitely, with a specified delay between each execution.
@@ -58,6 +29,11 @@ Run a long-running job that takes a long time to complete, but which needs to be
 #### Todo
 - [X] Fix flags conflict between run4ever and command (Fixed)
 - [X] Add watch flag
-- [ ] Add bash completion
+- [ ] Move runInfinitely function to tools package
 - [ ] Add github actions
 - [ ] Add tests
+- [ ] Add timeout flag
+- [ ] Add `-g` flag to run command in background
+- [ ] Add `-l` flag to list all running jobs
+- [ ] Add more examples
+- [ ] Add bash completion
