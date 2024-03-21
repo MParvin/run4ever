@@ -88,7 +88,7 @@ func Watch() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
+
 		_, err = f.Seek(0, io.SeekStart)
 		if err != nil {
 			log.Fatal(err)
