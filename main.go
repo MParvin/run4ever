@@ -15,10 +15,10 @@ import (
 func main() {
 	HomeDir := os.Getenv("HOME")
 	tools.CreateDir(HomeDir + "/.run4ever")
-	logFile := HomeDir + "/.run4ever/run4ever.state"
+	LogFile := HomeDir + "/.run4ever/run4ever.state"
 
-	if _, err := os.Stat(logFile); os.IsNotExist(err) || tools.IsEmpty(logFile) {
-		tools.WriteHeader(logFile)
+	if _, err := os.Stat(LogFile); os.IsNotExist(err) || tools.IsEmpty(LogFile) {
+		tools.WriteHeader(LogFile)
 	}
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
