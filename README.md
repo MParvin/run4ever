@@ -29,12 +29,11 @@ All examples are in [examples](examples) directory.
 #### Todo
 - [X] Fix flags conflict between run4ever and command (Fixed)
 - [X] Add watch flag
-- [ ] Move runInfinitely function to tools package
-- [ ] Add github actions
+- [X] Move runInfinitely function to tools package
+- [X] Add github actions
 - [ ] Add tests
 - [ ] Add timeout flag
 - [ ] Add `-g` flag to run command in background
 - [ ] Add `-l` flag to list all running jobs
 - [ ] Add more examples
 - [ ] Add bash completion
-
