@@ -43,7 +43,7 @@ func Log(command string, args []string, pid int) {
 
 func DeleteLog(pid int) {
 	HomeDir := os.Getenv("HOME")
-	// LogFile := HomeDir + "/.run4ever/run4ever.state"
+	LogFile := HomeDir + "/.run4ever/run4ever.state"
 	tempFileDir := HomeDir + "/.run4ever/run4ever.state.temp"
 
 	f, err := os.Open(LogFile)
