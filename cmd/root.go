@@ -24,7 +24,7 @@ var rootCmd = &cobra.Command{
 
 The -d flag or --delay flag is used to specify the delay between each execution of the command. The default value is 10 seconds.
 
-Use the -w flag or --watch to show a list of running commands and their PIDs, It will not run the provided command.
+Use the --ps to show a list of running commands and their PIDs, It will not run the provided command.
 
 You can also enable verbose mode by using the -v flag. This will cause run4ever to print additional output such as errors and confirmation messages.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -57,10 +57,10 @@ func init() {
 	rootCmd.Flags().StringVarP(&delay, "delay", "d", "10", "delay between to run of the command")
 	rootCmd.Flags().BoolP("verbose", "v", false, "Verbose mode")
 	rootCmd.Flags().SetInterspersed(false)
-	rootCmd.Flags().BoolP("watch", "w", false, "Watch mode")
+	rootCmd.Flags().BoolP("ps", "", false, "Running PIDs")
 
 	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 && rootCmd.Flags().Lookup("watch").Value.String() == "false" {
+		if len(args) == 0 && rootCmd.Flags().Lookup("ps").Value.String() == "false" {
 			log.Fatal("No command provided")
 		}
 	}
@@ -82,12 +82,9 @@ func init() {
 			fmt.Println("dely is", delayInt)
 		}
 
-		watch, err := cmd.Flags().GetBool("watch")
-		if err != nil {
-			log.Fatal("Error getting watch flag")
-		}
-		if watch {
-			tools.Watch()
+		psProvided, _ := cmd.Flags().GetBool("ps")
+		if psProvided {
+			tools.Ps()
 			return
 		}
 		tools.RunInfinitely(delayInt, args, verbose)

@@ -79,7 +79,7 @@ func DeleteLog(pid int) {
 	}
 }
 
-func Watch() {
+func Ps() {
 	HomeDir := os.Getenv("HOME")
 	LogFile := HomeDir + "/.run4ever/run4ever.state"
 
