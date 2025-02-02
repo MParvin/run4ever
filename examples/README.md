@@ -13,7 +13,7 @@ Setup a SOCKS proxy on port 1080, and If  the command fails, it will be restarte
 
 Run the script `my-backup-script.sh` every hour.
 ```bash
-./run4ever -d 3600 my-backup-script.sh
+./run4ever -d 3600 ./my-backup-script.sh
 ```
 
 Monitor the status of a service every minute.
@@ -24,4 +24,18 @@ run4ever -d 60 check-service-status.sh my-service
 Run `rsync` command every 5 minutes.
 ```bash
 run4ever -d 300 rsync -avz --delete /home/user/ /mnt/backup
+```
+
+## Notifications
+
+### Desktop Notification
+Show desktop notification on command failure.
+```bash
+run4ever -d 30 --notify-on failure --notify-method desktop ./my-backup-script.sh
+```
+
+### Telegram Notification
+Send a telegram message on command failure.
+```bash
+run4ever -d 60 --notify-on failure --notify-method telegram --telegram-token <token> --telegram-chat-id <chat-id> ./my-backup-script.sh
 ```
