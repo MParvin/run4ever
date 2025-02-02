@@ -31,9 +31,11 @@ func Log(command string, args []string, pid int) {
 		log.Fatal(err)
 	}
 
+	maskedArgs := MaskPassword(args)
+
 	t := time.Now()
 	tf := t.Format("2006-01-02 15:04:05")
-	if _, err := f.WriteString(fmt.Sprintf("%s \t | %d \t | %s \t\t | %s\n", tf, pid, command, strings.Join(args, " "))); err != nil {
+	if _, err := f.WriteString(fmt.Sprintf("%s \t | %d \t | %s \t\t | %s\n", tf, pid, command, strings.Join(maskedArgs, " "))); err != nil {
 		log.Fatal(err)
 	}
 	if err := f.Close(); err != nil {
