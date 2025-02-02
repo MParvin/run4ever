@@ -37,3 +37,4 @@ All examples are in [examples](examples) directory.
 - [ ] Add `-l` flag to list all running jobs
 - [ ] Add more examples
 - [ ] Add bash completion
+- [ ] Add notification on Success/Failure
