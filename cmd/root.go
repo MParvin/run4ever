@@ -13,6 +13,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	notifyOn  string
+	notifyMethod string
+	telegramToken string
+	telegramChatID string
+	telegramCustomAPI string
+)
+
 var delay string
 
 // rootCmd represents the base command when called without any subcommands
@@ -40,12 +48,9 @@ You can also enable verbose mode by using the -v flag. This will cause run4ever 
 		return nil
 	},
 	DisableFlagParsing: false,
-	// BashCompletionFunction:     bashCompletionFunc,
 	Run: func(cmd *cobra.Command, args []string) {},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -58,6 +63,12 @@ func init() {
 	rootCmd.Flags().BoolP("verbose", "v", false, "Verbose mode")
 	rootCmd.Flags().SetInterspersed(false)
 	rootCmd.Flags().BoolP("ps", "", false, "Running PIDs")
+	rootCmd.Flags().StringVar(&notifyOn, "notify-on", "", "Notify on: failure, success, always")
+	rootCmd.Flags().StringVar(&notifyMethod, "notify-method", "desktop", "Notification method: desktop, telegram")
+	rootCmd.Flags().StringVar(&telegramToken, "telegram-token", "", "Telegram bot token (required for Telegram notifications)")
+	rootCmd.Flags().StringVar(&telegramChatID, "telegram-chat-id", "", "Telegram chat ID (required for Telegram notifications)")
+	rootCmd.Flags().StringVar(&telegramCustomAPI, "telegram-custom-api", "", "Telegram custom API URL (optional)")
+
 
 	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 && rootCmd.Flags().Lookup("ps").Value.String() == "false" {
@@ -72,10 +83,7 @@ func init() {
 		}
 
 		verbose := false
-		verbose, err = cmd.Flags().GetBool("verbose")
-		if err != nil {
-			log.Fatal("Error getting verbose flag")
-		}
+		verbose, _ = cmd.Flags().GetBool("verbose")
 
 		if verbose {
 			fmt.Println("run4ever called")
@@ -87,7 +95,15 @@ func init() {
 			tools.Ps()
 			return
 		}
-		tools.RunInfinitely(delayInt, args, verbose)
+		tools.RunInfinitely(
+			delayInt, 
+			args, 
+			verbose,
+			notifyOn,
+			notifyMethod,
+			telegramToken,
+			telegramChatID,
+			telegramCustomAPI,
+		)
 	}
-
 }

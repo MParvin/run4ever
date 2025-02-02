@@ -37,3 +37,8 @@ All examples are in [examples](examples) directory.
 - [ ] Add `-l` flag to list all running jobs
 - [ ] Add more examples
 - [ ] Add bash completion
+- [X] Add notification on Success/Failure
+- [X] Add notification Desktop method
+- [X] Add notification Telegram method
+- [ ] Add notification Slack method
+- [ ] Add notification Email method
