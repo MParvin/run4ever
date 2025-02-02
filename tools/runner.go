@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func RunInfinitely(delayInt int, args []string, verbose bool , notifyOn string, notifyMethod string, telegramToken string, telegramChatID string, telegramCustomAPI string) {
+func RunInfinitely(delayInt int, args []string, verbose bool, notifyOn string, notifyMethod string, telegramToken string, telegramChatID string, telegramCustomAPI string) {
 	for {
 		exitStatus := 0
 
@@ -21,20 +21,21 @@ func RunInfinitely(delayInt int, args []string, verbose bool , notifyOn string, 
 			if verbose {
 				fmt.Println(err)
 			}
-			exitStatus = cmd.ProcessState.ExitCode() 
+			exitStatus = cmd.ProcessState.ExitCode()
 		}
 
 		if ShouldNotify(notifyOn, exitStatus) {
 			title := "run4ever: Task " + StatusToString(exitStatus)
-			message := fmt.Sprintf("Command %s exited with status %d", args[0], exitStatus)
-			
+			maskedArgs := MaskPassword(args)
+			message := fmt.Sprintf("Command %s %s exited with status %d", args[0], maskedArgs, exitStatus)
+
 			switch notifyMethod {
 			case "desktop":
 				if err := SendDesktopNotification(title, message, verbose); err != nil && verbose {
 					fmt.Println("Error sending desktop notification: ", err)
 				}
 			case "telegram":
-				if err := SendTelegramNotification(telegramToken, telegramChatID, message, telegramCustomAPI ,verbose); err != nil && verbose {
+				if err := SendTelegramNotification(telegramToken, telegramChatID, message, telegramCustomAPI, verbose); err != nil && verbose {
 					fmt.Println("Error sending Telegram notification: ", err)
 				}
 			}
