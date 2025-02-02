@@ -39,3 +39,17 @@ Send a telegram message on command failure.
 ```bash
 run4ever -d 60 --notify-on failure --notify-method telegram --telegram-token <token> --telegram-chat-id <chat-id> ./my-backup-script.sh
 ```
+
+TODO:
+### Slack Notification
+Send a slack message on command success.
+```bash
+run4ever -d 60 --notify-on success --notify-method slack --slack-token <token> --slack-channel <channel> ./my-backup-script.sh
+```
+
+TODO:
+### Email Notification
+Send an email on command failure.
+```bash
+run4ever -d 60 --notify-on failure --notify-method email --email-to <to> --email-from <from> --email-password <password> --email-smtp <smtp> --email-port <port> ./my-backup-script.sh
+```
