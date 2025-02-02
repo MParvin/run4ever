@@ -14,14 +14,14 @@ import (
 )
 
 var (
-	notifyOn  string
-	notifyMethod string
-	telegramToken string
-	telegramChatID string
+	notifyOn          string
+	notifyMethod      string
+	telegramToken     string
+	telegramChatID    string
 	telegramCustomAPI string
+	delay             string
+	maxRetries        int
 )
-
-var delay string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -48,7 +48,7 @@ You can also enable verbose mode by using the -v flag. This will cause run4ever 
 		return nil
 	},
 	DisableFlagParsing: false,
-	Run: func(cmd *cobra.Command, args []string) {},
+	Run:                func(cmd *cobra.Command, args []string) {},
 }
 
 func Execute() {
@@ -68,7 +68,7 @@ func init() {
 	rootCmd.Flags().StringVar(&telegramToken, "telegram-token", "", "Telegram bot token (required for Telegram notifications)")
 	rootCmd.Flags().StringVar(&telegramChatID, "telegram-chat-id", "", "Telegram chat ID (required for Telegram notifications)")
 	rootCmd.Flags().StringVar(&telegramCustomAPI, "telegram-custom-api", "", "Telegram custom API URL (optional)")
-
+	rootCmd.Flags().IntVarP(&maxRetries, "max-retries", "m", -1, "Maximum number of retries before giving up, -1 for infinite retries (default is -1)")
 
 	rootCmd.PreRun = func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 && rootCmd.Flags().Lookup("ps").Value.String() == "false" {
@@ -96,9 +96,10 @@ func init() {
 			return
 		}
 		tools.RunInfinitely(
-			delayInt, 
-			args, 
+			delayInt,
+			args,
 			verbose,
+			maxRetries,
 			notifyOn,
 			notifyMethod,
 			telegramToken,
