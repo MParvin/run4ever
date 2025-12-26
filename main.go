@@ -24,7 +24,7 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		tools.DeleteLog(os.Getpid())
+		tools.DeleteLogByPID(os.Getpid())
 		os.Exit(1)
 	}()
 	cmd.Execute()
