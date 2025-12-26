@@ -5,7 +5,7 @@ import (
 )
 
 var passwordFlags = []string{
-	"-password", "-p", "--pass",
+	"-password", "--password", "-p", "--pass",
 	"--secret", "--key", "--token",
 	"--db-pass", "--api-key", "--api-token",
 	"--auth", "--auth-token", "--auth-key",

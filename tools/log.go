@@ -2,106 +2,365 @@ package tools
 
 import (
 	"bufio"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
-	"io"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
+// JobState represents a single job entry in the state file
+type JobState struct {
+	JobID     string
+	Name      string
+	PID       int
+	Command   string
+	Args      string
+	StartTime time.Time
+	IsStale   bool
+}
+
+var (
+	stateMutex sync.Mutex
+)
+
+// GenerateJobID generates a unique job ID (UUID-like)
+func GenerateJobID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+// GetStateFile returns the path to the state file
+func GetStateFile() string {
+	homeDir := os.Getenv("HOME")
+	return filepath.Join(homeDir, ".run4ever", "run4ever.state")
+}
+
+// WriteHeader writes the header line to the state file
 func WriteHeader(LogFile string) {
-	f, err := os.OpenFile(LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
+	stateMutex.Lock()
+	defer stateMutex.Unlock()
+
+	// Check if file exists and has content
+	if info, err := os.Stat(LogFile); err == nil && info.Size() > 0 {
+		return // Header already exists
 	}
-	defer f.Close()
-	if _, err := f.WriteString("Time \t\t\t | PID \t\t | Command \t | Args \t\t\n"); err != nil {
+
+	header := "Time \t\t\t | Job-ID \t\t | PID \t\t | Command \t | Args \t\t | Status\n"
+	if err := atomicWriteFile(LogFile, []byte(header), 0644); err != nil {
 		log.Fatal(err)
 	}
 }
 
+// Log adds a new job entry to the state file
 func Log(command string, args []string, pid int) {
-	HomeDir := os.Getenv("HOME")
-	LogFile := HomeDir + "/.run4ever/run4ever.state"
-
-	f, err := os.OpenFile(LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	jobID, err := GenerateJobID()
 	if err != nil {
+		log.Fatalf("Failed to generate job ID: %v", err)
+	}
+	LogWithJobID(command, args, pid, jobID, "")
+}
+
+// LogWithJobID adds a new job entry with a specific job ID
+func LogWithJobID(command string, args []string, pid int, jobID string, name string) {
+	LogFile := GetStateFile()
+	LogWithFile(command, args, pid, jobID, name, LogFile)
+}
+
+// LogWithFile adds a new job entry to a specific state file
+func LogWithFile(command string, args []string, pid int, jobID string, name string, logFile string) {
+	stateMutex.Lock()
+	defer stateMutex.Unlock()
+
+	// Read existing state
+	jobs, err := readStateFile(logFile)
+	if err != nil && !os.IsNotExist(err) {
 		log.Fatal(err)
 	}
 
+	// Add new job
 	maskedArgs := MaskPassword(args)
-
 	t := time.Now()
-	tf := t.Format("2006-01-02 15:04:05")
-	if _, err := f.WriteString(fmt.Sprintf("%s \t | %d \t | %s \t\t | %s\n", tf, pid, command, strings.Join(maskedArgs, " "))); err != nil {
-		log.Fatal(err)
+
+	newJob := JobState{
+		JobID:     jobID,
+		Name:      name,
+		PID:       pid,
+		Command:   command,
+		Args:      strings.Join(maskedArgs, " "),
+		StartTime: t,
+		IsStale:   false,
 	}
-	if err := f.Close(); err != nil {
+	jobs = append(jobs, newJob)
+
+	// Write state atomically
+	if err := writeStateFile(logFile, jobs); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func DeleteLog(pid int) {
-	HomeDir := os.Getenv("HOME")
-	LogFile := HomeDir + "/.run4ever/run4ever.state"
-	tempFileDir := HomeDir + "/.run4ever/run4ever.state.temp"
+// DeleteLog removes a job entry by job ID
+func DeleteLog(jobID string) {
+	LogFile := GetStateFile()
+	DeleteLogWithFile(jobID, LogFile)
+}
 
-	f, err := os.Open(LogFile)
+// DeleteLogWithFile removes a job entry from a specific state file
+func DeleteLogWithFile(jobID string, logFile string) {
+	stateMutex.Lock()
+	defer stateMutex.Unlock()
+
+	jobs, err := readStateFile(logFile)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return
+		}
 		log.Fatal(err)
+	}
+
+	// Remove job with matching job ID
+	var filteredJobs []JobState
+	for _, job := range jobs {
+		if job.JobID != jobID {
+			filteredJobs = append(filteredJobs, job)
+		}
+	}
+
+	// Write state atomically
+	if err := writeStateFile(logFile, filteredJobs); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// DeleteLogByPID removes a job entry by PID (for backward compatibility)
+func DeleteLogByPID(pid int) {
+	LogFile := GetStateFile()
+	stateMutex.Lock()
+	defer stateMutex.Unlock()
+
+	jobs, err := readStateFile(LogFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return
+		}
+		log.Fatal(err)
+	}
+
+	// Remove job with matching PID
+	var filteredJobs []JobState
+	for _, job := range jobs {
+		if job.PID != pid {
+			filteredJobs = append(filteredJobs, job)
+		}
+	}
+
+	// Write state atomically
+	if err := writeStateFile(LogFile, filteredJobs); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// readStateFile reads the state file and returns all job entries
+func readStateFile(logFile string) ([]JobState, error) {
+	var jobs []JobState
+
+	f, err := os.Open(logFile)
+	if err != nil {
+		return jobs, err
 	}
 	defer f.Close()
-
-	tempFile, err := os.OpenFile(tempFileDir, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer tempFile.Close()
 
 	scanner := bufio.NewScanner(f)
-	writer := bufio.NewWriter(tempFile)
-
+	lineNum := 0
 	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, strconv.Itoa(pid)) {
+		lineNum++
+		line := strings.TrimSpace(scanner.Text())
+		if lineNum == 1 || line == "" {
+			continue // Skip header and empty lines
+		}
+
+		// Parse line: Time | Job-ID | PID | Command | Args | Status
+		parts := strings.Split(line, "|")
+		if len(parts) < 6 {
+			continue // Skip malformed lines
+		}
+
+		timeStr := strings.TrimSpace(parts[0])
+		jobID := strings.TrimSpace(parts[1])
+		pidStr := strings.TrimSpace(parts[2])
+		command := strings.TrimSpace(parts[3])
+		args := strings.TrimSpace(parts[4])
+		status := strings.TrimSpace(parts[5])
+
+		pid, err := strconv.Atoi(pidStr)
+		if err != nil {
 			continue
 		}
-		_, err := writer.WriteString(line + "\n")
+
+		startTime, err := time.Parse("2006-01-02 15:04:05", timeStr)
 		if err != nil {
-			log.Fatal(err)
+			startTime = time.Now() // Fallback to current time
 		}
+
+		isStale := status == "STALE"
+
+		// Check if process is actually running
+		if !isStale && !isProcessRunning(pid) {
+			isStale = true
+		}
+
+		jobs = append(jobs, JobState{
+			JobID:     jobID,
+			PID:       pid,
+			Command:   command,
+			Args:      args,
+			StartTime: startTime,
+			IsStale:   isStale,
+		})
 	}
-	if err := writer.Flush(); err != nil {
-		log.Fatal(err)
-	}
-	if err := os.Rename(tempFile.Name(), LogFile); err != nil {
-		log.Fatal(err)
-	}
+
+	return jobs, scanner.Err()
 }
 
+// writeStateFile writes all job entries to the state file atomically
+func writeStateFile(logFile string, jobs []JobState) error {
+	var lines []string
+	lines = append(lines, "Time \t\t\t | Job-ID \t\t | PID \t\t | Command \t | Args \t\t | Status\n")
+
+	for _, job := range jobs {
+		tf := job.StartTime.Format("2006-01-02 15:04:05")
+		status := "RUNNING"
+		if job.IsStale {
+			status = "STALE"
+		}
+		line := fmt.Sprintf("%s \t | %s \t | %d \t | %s \t\t | %s \t\t | %s\n",
+			tf, job.JobID, job.PID, job.Command, job.Args, status)
+		lines = append(lines, line)
+	}
+
+	content := []byte(strings.Join(lines, ""))
+	return atomicWriteFile(logFile, content, 0644)
+}
+
+// atomicWriteFile writes content to a file atomically using a temp file and rename
+func atomicWriteFile(filename string, content []byte, perm os.FileMode) error {
+	dir := filepath.Dir(filename)
+	tmpFile, err := os.CreateTemp(dir, filepath.Base(filename)+".tmp.*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpName := tmpFile.Name()
+
+	// Write content to temp file
+	if _, err := tmpFile.Write(content); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpName)
+		return fmt.Errorf("failed to write temp file: %w", err)
+	}
+
+	// Set permissions
+	if err := tmpFile.Chmod(perm); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpName)
+		return fmt.Errorf("failed to set permissions: %w", err)
+	}
+
+	// Close temp file before rename
+	if err := tmpFile.Close(); err != nil {
+		os.Remove(tmpName)
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+
+	// Atomic rename
+	if err := os.Rename(tmpName, filename); err != nil {
+		os.Remove(tmpName)
+		return fmt.Errorf("failed to rename temp file: %w", err)
+	}
+
+	return nil
+}
+
+// isProcessRunning checks if a process with the given PID is running
+func isProcessRunning(pid int) bool {
+	// Use ps command to check if process exists
+	cmd := exec.Command("ps", "-p", strconv.Itoa(pid))
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+	return true
+}
+
+// Ps displays all running jobs in a continuous loop
 func Ps() {
-	HomeDir := os.Getenv("HOME")
-	LogFile := HomeDir + "/.run4ever/run4ever.state"
+	LogFile := GetStateFile()
 
 	for {
-		f, err := os.Open(LogFile)
-		if err != nil {
+		stateMutex.Lock()
+		jobs, err := readStateFile(LogFile)
+		stateMutex.Unlock()
+
+		if err != nil && !os.IsNotExist(err) {
 			log.Fatal(err)
 		}
 
-		_, err = f.Seek(0, io.SeekStart)
-		if err != nil {
-			log.Fatal(err)
+		// Print header
+		fmt.Println("Time \t\t\t | Job-ID \t\t | PID \t\t | Command \t | Args \t\t | Status")
+		fmt.Println(strings.Repeat("-", 120))
+
+		// Print jobs
+		for _, job := range jobs {
+			status := "RUNNING"
+			if job.IsStale {
+				status = "STALE"
+			}
+			tf := job.StartTime.Format("2006-01-02 15:04:05")
+			fmt.Printf("%s \t | %s \t | %d \t | %s \t\t | %s \t\t | %s\n",
+				tf, job.JobID, job.PID, job.Command, job.Args, status)
 		}
 
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			fmt.Println(scanner.Text())
-		}
 		time.Sleep(3 * time.Second)
 		fmt.Print("\033[H\033[2J")
 	}
+}
 
+// ListJobs displays all running jobs once and exits
+func ListJobs() {
+	LogFile := GetStateFile()
+
+	stateMutex.Lock()
+	jobs, err := readStateFile(LogFile)
+	stateMutex.Unlock()
+
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+
+	if len(jobs) == 0 {
+		fmt.Println("No running jobs found.")
+		return
+	}
+
+	// Print header
+	fmt.Println("Time \t\t\t | Job-ID \t\t | PID \t\t | Command \t | Args \t\t | Status")
+	fmt.Println(strings.Repeat("-", 120))
+
+	// Print jobs
+	for _, job := range jobs {
+		status := "RUNNING"
+		if job.IsStale {
+			status = "STALE"
+		}
+		tf := job.StartTime.Format("2006-01-02 15:04:05")
+		fmt.Printf("%s \t | %s \t | %d \t | %s \t\t | %s \t\t | %s\n",
+			tf, job.JobID, job.PID, job.Command, job.Args, status)
+	}
 }
