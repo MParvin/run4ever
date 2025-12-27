@@ -120,7 +120,7 @@ run4ever is not a scheduler or cron replacement. For critical backups, prefer cr
 - [X] Add timeout flag
 - [X] Add `-g` flag to run command in background
 - [X] Add `-l` flag to list all running jobs
-- [ ] Add more examples
+- [X] Add more examples - added in examples directory
 - [X] Add bash completion
 - [X] Add notification on Success/Failure
 - [X] Add notification Desktop method
